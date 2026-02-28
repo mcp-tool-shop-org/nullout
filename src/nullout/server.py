@@ -100,7 +100,7 @@ TOOLS_LIST: list[dict[str, Any]] = [
         "name": "who_is_using",
         "description": (
             "Tier A attribution: list processes currently using the target "
-            "(Restart Manager). Phase 1 stub."
+            "via Windows Restart Manager. Read-only — never kills processes."
         ),
         "inputSchema": {
             "type": "object",
@@ -136,7 +136,7 @@ class NullOutServer:
             "get_finding": lambda p: handle_get_finding(p, self.store),
             "plan_cleanup": lambda p: handle_plan_cleanup(p, self.store, self.token_secret),
             "delete_entry": lambda p: handle_delete_entry(p, self.roots, self.store, self.token_secret),
-            "who_is_using": lambda p: handle_who_is_using(p, self.store),
+            "who_is_using": lambda p: handle_who_is_using(p, self.roots, self.store),
         }
 
         handler = handlers.get(method)

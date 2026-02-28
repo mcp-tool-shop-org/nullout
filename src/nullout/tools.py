@@ -359,10 +359,11 @@ def handle_delete_entry(
 
 def handle_who_is_using(
     args: dict[str, Any],
+    roots: dict[str, Root],
     store: Store,
 ) -> dict[str, Any]:
-    """Tier A attribution: list processes using the target (Phase 1 stub)."""
-    return who_is_using(args, store)
+    """Tier A attribution: list processes using the target (Restart Manager)."""
+    return who_is_using(args, roots, store)
 
 
 # --- Internal helpers ---
