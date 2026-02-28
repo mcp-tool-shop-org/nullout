@@ -5,11 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [1.1.2] - 2026-02-28
+## [1.1.3] - 2026-02-28
 
 ### Fixed
 
-- Exclude ci-root/ from sdist to prevent hatchling crash on trailing-space test fixtures
+- Move CI test roots outside repo checkout to prevent hatchling sdist walk crash on trailing-space fixtures
 
 ## [1.1.1] - 2026-02-28
 

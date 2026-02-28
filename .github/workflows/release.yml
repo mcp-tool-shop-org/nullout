@@ -28,7 +28,7 @@ jobs:
       PYTHONDONTWRITEBYTECODE: "1"
       PIP_DISABLE_PIP_VERSION_CHECK: "1"
       PIP_NO_PYTHON_VERSION_WARNING: "1"
-      NULLOUT_ROOTS: ${{ github.workspace }}\ci-root
+      NULLOUT_ROOTS: ${{ runner.temp }}\ci-root
       NULLOUT_TOKEN_SECRET: "release-ci-not-a-real-secret"
 
     steps:
