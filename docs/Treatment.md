@@ -57,6 +57,33 @@ Target is open/locked by another process.
 **Next:** call `who_is_using(findingId)` for Restart Manager attribution. Close the
 identified process, then retry `delete_entry` with a fresh plan.
 
+#### who_is_using output
+
+Each process entry contains:
+
+| Field | Type | Description |
+|---|---|---|
+| `pid` | int | Process ID |
+| `appName` | string | Application name (best available) |
+| `serviceShortName` | string | Service short name (empty for non-services) |
+| `type` | string | `main_window`, `other_window`, `service`, `explorer`, `console`, `critical`, `unknown`, or `unknown_<n>` for undocumented RM application types |
+| `sessionId` | int | Terminal Services session ID |
+| `restartable` | bool | Whether the process registered for restart |
+
+**`type` is not a closed enum.** Windows may return undocumented application type
+codes (e.g. `1000` on Windows 11). These are formatted as `unknown_<n>` and should
+be treated as informational. Do not switch/match on type exhaustively.
+
+**Trailing dot/space limitation:** For entries with `WIN_TRAILING_DOT_SPACE` hazard,
+Restart Manager receives a Win32 path that gets normalized (trailing chars stripped).
+RM may fail to find lockers for the exact on-disk entry. When this applies:
+
+- `confidence` is downgraded to `medium` (with results) or `low` (without)
+- A `limitations` note explains the constraint
+- If RM returns empty, a secondary query with the normalized path name is attempted
+  as a hint — results are labeled `"source": "normalized_path_hint"` and should be
+  treated as non-authoritative
+
 ### E_ACCESS_DENIED / E_ELEVATION_REQUIRED
 
 Permissions block deletion.

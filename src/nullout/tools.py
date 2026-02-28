@@ -1,11 +1,13 @@
-"""MCP tool handlers: list_allowed_roots, scan, get_finding, plan, delete, who_is_using."""
+"""MCP tool handlers for NullOut MCP server."""
 
 from __future__ import annotations
 
 import os
+import sys
 import time
 from typing import Any
 
+from nullout import __version__
 from nullout.config import Root, REPARSE_POLICY, TOKEN_TTL_SECONDS, STRATEGY_V1
 from nullout.errors import err, ok
 from nullout.hazards import detect_hazards, parse_basename, has_trailing_dot_or_space
@@ -364,6 +366,30 @@ def handle_who_is_using(
 ) -> dict[str, Any]:
     """Tier A attribution: list processes using the target (Restart Manager)."""
     return who_is_using(args, roots, store)
+
+
+def handle_get_server_info(
+    _args: dict[str, Any],
+) -> dict[str, Any]:
+    """Return server metadata: version, platform, policies, capabilities."""
+    from nullout.restart_manager import rm_available
+
+    return ok({
+        "name": "NullOut",
+        "version": __version__,
+        "platform": sys.platform,
+        "pythonVersion": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
+        "policies": {
+            "reparsePolicy": REPARSE_POLICY,
+            "deletePolicy": "files_and_empty_dirs",
+            "tokenTtlSeconds": TOKEN_TTL_SECONDS,
+            "strategy": STRATEGY_V1,
+        },
+        "capabilities": {
+            "restartManager": rm_available(),
+        },
+        "registryName": "nullout-mcp",
+    })
 
 
 # --- Internal helpers ---

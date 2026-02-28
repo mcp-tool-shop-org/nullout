@@ -53,7 +53,7 @@ NullOut defends against: destructive misuse/overreach, path traversal/namespace 
 ## Requirements
 
 - Windows 10/11
-- Python 3.11+
+- Python 3.10+
 
 ---
 

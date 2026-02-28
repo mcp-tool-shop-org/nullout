@@ -227,3 +227,48 @@ def test_who_is_using_rejects_missing_finding(store):
     )
     assert not result["ok"]
     assert result["error"]["code"] == "E_NOT_FOUND"
+
+
+# --- RM type mapping stability ---
+
+
+def test_rm_unknown_type_is_stringable_and_stable():
+    """Unknown RM ApplicationType values produce stable string output."""
+    from nullout.restart_manager import _RM_APP_TYPE_NAMES
+
+    # Known types map to their names
+    assert _RM_APP_TYPE_NAMES[0] == "unknown"
+    assert _RM_APP_TYPE_NAMES[3] == "service"
+    assert _RM_APP_TYPE_NAMES[5] == "console"
+
+    # Unknown types use the fallback format — matches the dict.get() pattern in query_file_lockers
+    undocumented_code = 1000
+    result = _RM_APP_TYPE_NAMES.get(undocumented_code, f"unknown_{undocumented_code}")
+    assert result == "unknown_1000"
+    assert isinstance(result, str)
+
+    # Another unknown code
+    result2 = _RM_APP_TYPE_NAMES.get(999, f"unknown_{999}")
+    assert result2 == "unknown_999"
+
+
+# --- Server info tool ---
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows-only")
+def test_get_server_info():
+    """get_server_info returns version, platform, policies, capabilities."""
+    from nullout.tools import handle_get_server_info
+    from nullout import __version__
+
+    result = handle_get_server_info({})
+    assert result["ok"]
+    info = result["result"]
+    assert info["name"] == "NullOut"
+    assert info["version"] == __version__
+    assert info["platform"] == "win32"
+    assert info["policies"]["reparsePolicy"] == "deny_all"
+    assert info["policies"]["deletePolicy"] == "files_and_empty_dirs"
+    assert info["policies"]["tokenTtlSeconds"] == 300
+    assert info["registryName"] == "nullout-mcp"
+    assert isinstance(info["capabilities"]["restartManager"], bool)

@@ -296,6 +296,27 @@ def who_is_using(
             {"target": target_abs, "rmError": e.args[0]},
         )
 
+    # Normalized-path fallback hint: if RM returned nothing and the entry
+    # has trailing dot/space, try querying with the normalized name.
+    # Win32 strips trailing chars, so RM may find lockers for the
+    # normalized path even though it missed the exact on-disk entry.
+    if not processes and limitations and has_trailing_dot_or_space(finding.name):
+        normalized = target_abs.rstrip(". ")
+        if normalized != target_abs:
+            try:
+                hint_procs = query_file_lockers(normalized)
+                for p in hint_procs:
+                    p["source"] = "normalized_path_hint"
+                processes = hint_procs
+                if hint_procs:
+                    limitations.append(
+                        "Results are from a normalized-path hint query (trailing "
+                        "chars stripped). These processes may not hold the exact "
+                        "on-disk entry."
+                    )
+            except OSError:
+                pass  # Non-fatal: hint is best-effort
+
     # Confidence: high if no limitations, medium if limitations but results found,
     # low if no results and limitations exist
     if processes:

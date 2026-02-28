@@ -16,6 +16,7 @@ from nullout.tools import (
     handle_plan_cleanup,
     handle_delete_entry,
     handle_who_is_using,
+    handle_get_server_info,
     set_store,
 )
 
@@ -110,6 +111,15 @@ TOOLS_LIST: list[dict[str, Any]] = [
         },
         "annotations": {"readOnlyHint": True},
     },
+    {
+        "name": "get_server_info",
+        "description": (
+            "Server metadata: name, version, platform, policies, and capabilities. "
+            "Useful for debugging version mismatches and understanding server config."
+        ),
+        "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False},
+        "annotations": {"readOnlyHint": True},
+    },
 ]
 
 
@@ -137,6 +147,7 @@ class NullOutServer:
             "plan_cleanup": lambda p: handle_plan_cleanup(p, self.store, self.token_secret),
             "delete_entry": lambda p: handle_delete_entry(p, self.roots, self.store, self.token_secret),
             "who_is_using": lambda p: handle_who_is_using(p, self.roots, self.store),
+            "get_server_info": lambda p: handle_get_server_info(p),
         }
 
         handler = handlers.get(method)
