@@ -8,7 +8,7 @@ version = "1.0.0"
 description = "MCP server that finds and safely removes undeletable files on Windows"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 authors = [
     { name = "mcp-tool-shop", email = "64996768+mcp-tool-shop@users.noreply.github.com" }
 ]
@@ -17,6 +17,7 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: System :: Filesystems",

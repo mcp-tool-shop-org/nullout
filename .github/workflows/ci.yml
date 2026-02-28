@@ -2,41 +2,126 @@ name: CI
 
 on:
   push:
+    branches: [ "main" ]
     paths:
       - "src/**"
       - "tests/**"
       - "pyproject.toml"
       - ".github/workflows/**"
   pull_request:
+    branches: [ "main" ]
     paths:
       - "src/**"
       - "tests/**"
       - "pyproject.toml"
       - ".github/workflows/**"
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  test:
+  test-windows:
+    name: Windows Tests (py${{ matrix.python-version }})
     runs-on: windows-latest
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12"]
-    steps:
-      - uses: actions/checkout@v4
+        python-version: [ "3.10", "3.11", "3.12" ]
 
-      - uses: actions/setup-python@v5
+    env:
+      PYTHONUTF8: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PIP_NO_PYTHON_VERSION_WARNING: "1"
+
+      NULLOUT_ROOTS: ${{ github.workspace }}\ci-root
+      NULLOUT_TOKEN_SECRET: "ci-not-a-real-secret"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
 
-      - name: Install dependencies
-        run: pip install -e ".[dev]"
+      - name: Create CI root + fixtures
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "${env:NULLOUT_ROOTS}" | Out-Null
+          Set-Content -Path (Join-Path "${env:NULLOUT_ROOTS}" "ci-fixture.txt") -Value "hello"
 
-      - name: Run tests
-        env:
-          NULLOUT_ROOTS: ${{ runner.temp }}
-          NULLOUT_TOKEN_SECRET: ci-test-secret-not-for-production
-        run: pytest tests/ -v --tb=short
+      - name: Install (dev)
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Environment info
+        shell: pwsh
+        run: |
+          python --version
+          python -m pip --version
+          python -c "import platform; print(platform.platform())"
+
+      - name: Smoke test
+        shell: pwsh
+        run: |
+          python -c "import nullout; print(f'nullout {nullout.__version__} import ok')"
+
+      - name: Run tests (3x determinism)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "reports" | Out-Null
+
+          python -m pytest -q `
+            --disable-warnings `
+            --maxfail=1 `
+            --junitxml=reports/junit-1.xml `
+            --cov=nullout `
+            --cov-report=xml:reports/coverage-1.xml `
+            --cov-report=term
+
+          python -m pytest -q `
+            --disable-warnings `
+            --maxfail=1 `
+            --junitxml=reports/junit-2.xml `
+            --cov=nullout `
+            --cov-report=xml:reports/coverage-2.xml `
+            --cov-report=term
+
+          python -m pytest -q `
+            --disable-warnings `
+            --maxfail=1 `
+            --junitxml=reports/junit-3.xml `
+            --cov=nullout `
+            --cov-report=xml:reports/coverage-3.xml `
+            --cov-report=term
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports-windows-py${{ matrix.python-version }}
+          path: reports/junit-*.xml
+          if-no-files-found: warn
+
+      - name: Select primary coverage
+        if: always()
+        shell: pwsh
+        run: |
+          if (Test-Path "reports/coverage-3.xml") {
+            Copy-Item "reports/coverage-3.xml" "reports/coverage.xml" -Force
+          }
+
+      - name: Upload primary coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-windows-py${{ matrix.python-version }}
+          path: reports/coverage.xml
+          if-no-files-found: warn
