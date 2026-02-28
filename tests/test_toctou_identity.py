@@ -9,6 +9,7 @@ import pytest
 from nullout.models import Finding
 from nullout.tools import handle_plan_cleanup, handle_delete_entry
 from nullout.win_identity import get_identity
+from nullout.win_paths import to_extended_path
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows-only")
@@ -20,7 +21,7 @@ def test_identity_mismatch_on_replace(temp_root, store, token_secret):
     # Use extended path so trailing dot is preserved
     file_name = "testfile."
     file_path = os.path.join(td, file_name)
-    ext_path = f"\\\\?\\{os.path.abspath(file_path)}"
+    ext_path = to_extended_path(file_path)
 
     with open(ext_path, "w") as f:
         f.write("original")
@@ -76,7 +77,7 @@ def test_identity_match_on_unchanged(temp_root, store, token_secret):
 
     file_name = "testfile."
     file_path = os.path.join(td, file_name)
-    ext_path = f"\\\\?\\{os.path.abspath(file_path)}"
+    ext_path = to_extended_path(file_path)
 
     with open(ext_path, "w") as f:
         f.write("original")

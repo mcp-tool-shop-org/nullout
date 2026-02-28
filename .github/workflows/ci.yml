@@ -6,6 +6,7 @@ on:
     paths:
       - "src/**"
       - "tests/**"
+      - "scripts/**"
       - "pyproject.toml"
       - ".github/workflows/**"
   pull_request:
@@ -13,6 +14,7 @@ on:
     paths:
       - "src/**"
       - "tests/**"
+      - "scripts/**"
       - "pyproject.toml"
       - ".github/workflows/**"
   workflow_dispatch: {}
@@ -125,3 +127,8 @@ jobs:
           name: coverage-windows-py${{ matrix.python-version }}
           path: reports/coverage.xml
           if-no-files-found: warn
+
+      - name: Shipcheck (end-to-end stdio)
+        shell: pwsh
+        run: |
+          pwsh -File scripts/shipcheck.ps1

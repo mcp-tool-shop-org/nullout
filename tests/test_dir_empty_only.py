@@ -9,6 +9,7 @@ import pytest
 from nullout.models import Finding
 from nullout.tools import handle_plan_cleanup, handle_delete_entry
 from nullout.win_identity import get_identity
+from nullout.win_paths import to_extended_path
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows-only")
@@ -19,7 +20,7 @@ def test_non_empty_dir_refused(temp_root, store, token_secret):
     # Create a directory with a child file using extended paths
     # (trailing space requires \\?\ to preserve on NTFS)
     dir_path = os.path.join(td, "notempty ")
-    ext_dir = f"\\\\?\\{os.path.abspath(dir_path)}"
+    ext_dir = to_extended_path(dir_path)
     os.makedirs(ext_dir, exist_ok=True)
     child = ext_dir + "\\child.txt"
     with open(child, "w") as f:
@@ -69,8 +70,8 @@ def test_empty_dir_succeeds(temp_root, store, token_secret):
 
     # Create an empty directory with a trailing space (hazardous)
     dir_path = os.path.join(td, "empty ")
-    # Use extended path to create dir with trailing space
-    ext_path = f"\\\\?\\{os.path.abspath(dir_path)}"
+    # Use to_extended_path to preserve trailing space on NTFS
+    ext_path = to_extended_path(dir_path)
     os.makedirs(ext_path, exist_ok=True)
 
     vol, fid = get_identity(dir_path)

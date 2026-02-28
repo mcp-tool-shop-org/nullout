@@ -14,7 +14,7 @@ from nullout.restart_manager import who_is_using
 from nullout.store import Store
 from nullout.tokens import make_confirm_token, verify_confirm_token
 from nullout.win_identity import get_identity
-from nullout.win_paths import to_extended_path, is_under_root, is_reparse_point
+from nullout.win_paths import to_extended_path, is_under_root, is_reparse_point, safe_abspath
 
 
 def handle_list_allowed_roots(
@@ -63,10 +63,15 @@ def handle_scan_reserved_names(
         if depth > max_depth:
             return
         try:
-            with os.scandir(current) as it:
+            # Use extended path for scandir — Win32 normalizes trailing
+            # dots/spaces which makes hazardous directories inaccessible.
+            scan_path = to_extended_path(current)
+            with os.scandir(scan_path) as it:
                 for entry in it:
                     visited += 1
-                    full = entry.path
+                    # Build regular path from parent + entry name to preserve
+                    # trailing chars that os.path.join might normalize.
+                    full = current + os.sep + entry.name
                     name = entry.name
                     is_dir = entry.is_dir(follow_symlinks=False)
 
@@ -239,8 +244,8 @@ def handle_delete_entry(
     if not root:
         return err("E_ROOT_NOT_ALLOWED", "Root not allowlisted.", {"rootId": finding.rootId})
 
-    target_abs = os.path.abspath(finding.observedPath)
-    root_abs = os.path.abspath(root.path)
+    target_abs = safe_abspath(finding.observedPath)
+    root_abs = os.path.abspath(root.path)  # Root paths never have trailing dots/spaces
     if not is_under_root(target_abs, root_abs):
         return err(
             "E_TRAVERSAL_REJECTED",
@@ -282,7 +287,7 @@ def handle_delete_entry(
     # --- 5. Empty-only directory rule ---
     if finding.entryType == "dir":
         try:
-            with os.scandir(target_abs) as it:
+            with os.scandir(to_extended_path(target_abs)) as it:
                 if any(True for _ in it):
                     return err(
                         "E_DIR_NOT_EMPTY",
@@ -382,7 +387,8 @@ def _make_finding(
     fid: str | None,
 ) -> Finding:
     """Build a Finding from scan data."""
-    rel = os.path.relpath(full_path, root_abs)
+    # Don't use os.path.relpath — it normalizes trailing dots/spaces via abspath
+    rel = full_path[len(root_abs):].lstrip(os.sep)
     name = os.path.basename(full_path)
     base, ext = parse_basename(name)
     entry_type = "dir" if entry.is_dir(follow_symlinks=False) else "file"
