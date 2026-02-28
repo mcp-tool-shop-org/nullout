@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "nullout-mcp"
-version = "1.1.0"
+version = "1.1.1"
 description = "MCP server that finds and safely removes undeletable files on Windows"
 readme = "README.md"
 license = "MIT"
