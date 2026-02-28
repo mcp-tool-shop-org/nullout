@@ -5,11 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [1.1.3] - 2026-02-28
+## [1.1.4] - 2026-02-28
 
 ### Fixed
 
-- Move CI test roots outside repo checkout to prevent hatchling sdist walk crash on trailing-space fixtures
+- Move CI test roots to runner.temp via step-level env (runner context unavailable in job-level env)
+- Exclude ci-root/, reports/, site/ from sdist build
 
 ## [1.1.1] - 2026-02-28
 

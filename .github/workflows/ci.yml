@@ -38,10 +38,13 @@ jobs:
       PIP_DISABLE_PIP_VERSION_CHECK: "1"
       PIP_NO_PYTHON_VERSION_WARNING: "1"
 
-      NULLOUT_ROOTS: ${{ runner.temp }}\ci-root
       NULLOUT_TOKEN_SECRET: "ci-not-a-real-secret"
 
     steps:
+      - name: Set NULLOUT_ROOTS
+        shell: pwsh
+        run: echo "NULLOUT_ROOTS=${{ runner.temp }}\ci-root" >> $env:GITHUB_ENV
+
       - name: Checkout
         uses: actions/checkout@v4
 
