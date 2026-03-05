@@ -15,7 +15,7 @@ export const config: SiteConfig = {
     headlineAccent: 'remove the unremovable.',
     description: 'MCP server that finds and safely removes undeletable files on Windows — reserved device names, trailing dots, overlong paths.',
     primaryCta: { href: '#usage', label: 'Get started' },
-    secondaryCta: { href: '#features', label: 'Learn more' },
+    secondaryCta: { href: 'handbook/', label: 'Read the Handbook' },
     previews: [
       { label: 'Install', code: 'pip install nullout-mcp' },
       { label: 'Configure', code: 'set NULLOUT_ROOTS=C:\\Users\\me\\Downloads' },
